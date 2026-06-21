@@ -35,6 +35,16 @@ if "status" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history = []
 
+# FIX: Added callback function to reset game state and clear input widget key before rerunning.
+def reset_game():
+    st.session_state.attempts = 0
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.status = "playing"
+    st.session_state.history = []
+    input_key = f"guess_input_{difficulty}"
+    if input_key in st.session_state:
+        st.session_state[input_key] = ""
+
 # --- UI Components ---
 st.subheader("Make a guess")
 attempts_box = st.empty()
@@ -45,24 +55,19 @@ col1, col2, col3 = st.columns(3)
 with col1:
     submit = st.button("Submit Guess 🚀")
 with col2:
-    new_game = st.button("New Game 🔁")
+    # FIX: Attached reset_game callback to clear input/history properly without API errors.
+    new_game = st.button("New Game 🔁", on_click=reset_game)
 with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
 # --- Logic Handlers ---
-if new_game:
-    st.session_state.attempts = 0
-    st.session_state.secret = random.randint(low, high)
-    st.session_state.status = "playing"
-    st.session_state.history = [] # This already clears the history
-    
-    # FIX: Clear the actual text input box by resetting its specific session state key
-    input_key = f"guess_input_{difficulty}"
-    if input_key in st.session_state:
-        st.session_state[input_key] = ""
-        
-    st.success("New game started.")
-    st.rerun()
+if st.session_state.status != "playing":
+    attempts_box.info(f"Attempts left: {max(0, attempt_limit - st.session_state.attempts)}")
+    if st.session_state.status == "won":
+        st.success("You already won. Start a new game to play again.")
+    else:
+        st.error("Game over. Start a new game to try again.")
+    st.stop()
 
 if submit:
     st.session_state.attempts += 1
