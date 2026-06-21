@@ -53,19 +53,16 @@ with col3:
 if new_game:
     st.session_state.attempts = 0
     st.session_state.secret = random.randint(low, high)
-    # FIX: Added history reset and status updates for a functioning new game button using agent mode.
     st.session_state.status = "playing"
-    st.session_state.history = []
+    st.session_state.history = [] # This already clears the history
+    
+    # FIX: Clear the actual text input box by resetting its specific session state key
+    input_key = f"guess_input_{difficulty}"
+    if input_key in st.session_state:
+        st.session_state[input_key] = ""
+        
     st.success("New game started.")
     st.rerun()
-
-if st.session_state.status != "playing":
-    attempts_box.info(f"Attempts left: {max(0, attempt_limit - st.session_state.attempts)}")
-    if st.session_state.status == "won":
-        st.success("You already won. Start a new game to play again.")
-    else:
-        st.error("Game over. Start a new game to try again.")
-    st.stop()
 
 if submit:
     st.session_state.attempts += 1
